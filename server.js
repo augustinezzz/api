@@ -228,9 +228,9 @@ app.post("/company",urlencodedParser,[
 
   check('companyid').isNumeric()
   .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers"),
-  check('companyname').isAlpha()
+  check('companyname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('Company Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
-  check('companycity').isAlpha()
+  check('companycity').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('City Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
 
 ],async(req, res) => {
@@ -259,7 +259,7 @@ app.post("/company",urlencodedParser,[
           return;
         }
         conn.query("INSERT INTO company VALUE (?,?,?)",
-          [req.body.companyid,req.body.companyname,req.body.companycity])
+          [req.body.companyid, req.body.companyname, req.body.companycity])
             .then((data) => {
               res.header("Content-Type", "application/json");
               res.status(200);
@@ -302,7 +302,7 @@ app.post("/company",urlencodedParser,[
  *
  */
 app.delete('/company/:company_id',[
-  check('companyid').isNumeric()
+  check('company_id').isNumeric()
   .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers")  
 ],(req, res)=>{
  var errors= validationResult(req);
@@ -381,9 +381,9 @@ app.delete('/company/:company_id',[
 app.patch('/company',[
   check('companyid').isNumeric()
   .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers"),
-  check('companyname').isAlpha()
+  check('companyname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('Company Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
-  check('companycity').isAlpha()
+  check('companycity').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('City Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
   
 ] ,(req, res)=>{
@@ -476,9 +476,9 @@ app.put("/company",[
 
   check('companyid').isNumeric()
   .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers"),
-  check('companyname').isAlpha()
+  check('companyname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('Company Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
-  check('companycity').isAlpha()
+  check('companycity').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
   .withMessage('City Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
 
 ] ,(req, res) => {
@@ -533,5 +533,3 @@ app.put("/company",[
 app.listen(port, () => {
         console.log (`Listening to port ${port}!`)
 });
-
-
