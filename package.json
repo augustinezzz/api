@@ -14,8 +14,10 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-validator": "^6.6.1",
+    "killport": "^1.0.1",
     "mariadb": "^2.4.2",
     "swagger-jsdoc": "^4.2.3",
-    "swagger-ui-express": "^4.1.4"
+    "swagger-ui-express": "^4.1.4",
+    "validator": "^13.1.17"
   }
 }

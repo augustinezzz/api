@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const {check, body, validationResult } = require('express-validator');
+const validator = require('validator');
 
 const options = {
   swaggerDefinition: {
@@ -97,7 +98,7 @@ app.post('/agents', function(req,res){
 
 /**
  * @swagger
- * /customer:
+ * /customer/{cust_country}:
  *     get:
  *       description: Return all agents
  *       produces:
@@ -105,15 +106,20 @@ app.post('/agents', function(req,res){
  *       responses:
  *           200:
  *               description: Object containing agents contaitng array
+ *       parameters:
+ *           - name: cust_country
+ *             description: customer object
+ *             in: path
+ *             require: true
  * 
  */
 
 
-app.get('/customer', function (req,res){
+app.get('/customer/:cust_country', function (req,res){
         pool.getConnection()
     .then(conn => {
 
-      conn.query("SELECT * FROM customer WHERE CUST_COUNTRY='INDIA' ")
+      conn.query("SELECT * FROM customer WHERE CUST_COUNTRY=?",[req.params.cust_country] )
         .then((rows) => {
           console.log(rows);
            res.json(rows);
@@ -150,7 +156,12 @@ app.get('/customer', function (req,res){
  * 
  */
 
-app.get('/order', function (req,res){
+app.get('/order', urlencodedParser,[
+
+  check('custcountry').isAlpha()
+  .withMessage('Country should be alphabets').isLength({max:20}).withMessage("Maximum of 20 numbers")],
+  
+  function (req,res){
         pool.getConnection()
     .then(conn => {
 
@@ -172,7 +183,7 @@ app.get('/order', function (req,res){
     }).catch(err => {
       //not connected
 })
-});
+  });
 
 
 //post request root foods 
@@ -195,7 +206,7 @@ app.get('/order', function (req,res){
  * @swagger
  * /company:
  *    post:
- *      description: add record to company table
+ *      description: Create new Company Record
  *      produces:
  *          - application/json
  *      responses:
@@ -272,7 +283,7 @@ app.post("/company",urlencodedParser,[
 
 /**
  * @swagger
- * /company/{company_id}:
+ * /company/{companyid}:
  *    delete:
  *      description: delete record from table
  *      produces:
@@ -283,7 +294,7 @@ app.post("/company",urlencodedParser,[
  *          500:
  *              description: Data already exists
  *      parameters:
- *          - name: company_id
+ *          - name: companyid
  *            description: company object
  *            in: path
  *            required: true
@@ -292,7 +303,7 @@ app.post("/company",urlencodedParser,[
  */
 app.delete('/company/:company_id',[
   check('companyid').isNumeric()
- .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers")  
+  .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers")  
 ],(req, res)=>{
  var errors= validationResult(req);
  
@@ -358,7 +369,7 @@ app.delete('/company/:company_id',[
  *          200:
  *              description: Patched data to company table
  *      parameters:
- *          - name: company
+ *          - name: companyid
  *            description: company object
  *            in: body
  *            required: true
@@ -446,7 +457,13 @@ app.patch('/company',[
  *          500:
  *              description: Data already exists
  *      parameters:
- *          - name: Foods
+ *          - name: company_id
+ *            description: company object
+ *            in: path
+ *            required: true
+ *            schema:
+ *              $ref: '#/definitions/Company'
+ *          - name: Company
  *            description: company object
  *            in: body
  *            required: true
