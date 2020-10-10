@@ -3,9 +3,11 @@ const app = express();
 const port = 3000;
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const { urlencoded } = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(bodyParser.raw());
 
 //requiring swagger details
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -186,7 +188,10 @@ app.get('/order', urlencodedParser,[
   });
 
 
-//post request root foods 
+//POST 
+//
+//
+//
 
 
 /**
@@ -201,17 +206,16 @@ app.get('/order', urlencodedParser,[
  *       companycity:
  *         type: string
  */
-
 /**
  * @swagger
- * /company:
+ * /company/post:
  *    post:
- *      description: Create new Company Record
+ *      description: add record to company table
  *      produces:
  *          - application/json
  *      responses:
  *          200:
- *              description: Added data to company table
+ *              description: Added data to Foods table
  *          500:
  *              description: Data already exists
  *      parameters:
@@ -224,42 +228,42 @@ app.get('/order', urlencodedParser,[
  *
  *
  */
-app.post("/company",urlencodedParser,[
+app.post("/company/post",urlencodedParser,[
 
   check('companyid').isNumeric()
-  .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers"),
+  .withMessage('id should only have Number').isLength({max:6}).withMessage("Id should have maximum 6 numbers"),
   check('companyname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('Company Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
+  .withMessage('Name should only have Alphabets').isLength({max:25}).withMessage("Name should have maximum 25 characters"),
   check('companycity').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('City Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
+  .withMessage('Company city should only have Alphabets').isLength({max:25}).withMessage("Name should have maximum 25 characters")
 
-],async(req, res) => {
+] ,async(req, res) => {
 
   var errors= validationResult(req);
-
+  
   if (!errors.isEmpty()) {
           return res.status(422).json({ errors: errors.array() })
-
+        
   }else{ 
-  if(req.body==null || req.body.companyname==null || req.body.companycity==null
-    || req.body.companyid==null){
+  if(req.body==null || req.body.companyname==null
+    || req.body.companycity==null){
      res.header("Content-Type", "application/json");
      res.status(400);
-     res.send("INvalid Body ");
+     res.send("Invalid Body");
      return;
     }
   pool
     .getConnection()
     .then((conn) => {
-      conn.query("SELECT * FROM commpany where COMPANY_ID=?",[req.body.companyid]).then((row)=>{
+      conn.query("SELECT * FROM company where COMPANY_ID=?",[req.body.companyid]).then((row)=>{
         if(row.length>0){
           res.header("Content-Type", "application/json");
-          res.status(500).send({error:"Data is already present"});
+          res.status(500).send({error:"Data already exists"});
           conn.close();
           return;
         }
         conn.query("INSERT INTO company VALUE (?,?,?)",
-          [req.body.companyid, req.body.companyname, req.body.companycity])
+          [req.body.companyid,req.body.companyname,req.body.companycity])
             .then((data) => {
               res.header("Content-Type", "application/json");
               res.status(200);
@@ -273,6 +277,7 @@ app.post("/company",urlencodedParser,[
     });
   }
 });
+
 
 //
 //
@@ -362,7 +367,7 @@ app.delete('/company/:company_id',[
  * @swagger
  * /company:
  *    patch:
- *      description: add record to company table
+ *      description: Add record to company table
  *      produces:
  *          - application/json
  *      responses:
@@ -398,15 +403,16 @@ app.patch('/company',[
   .then(con =>{
           
            con.query("SELECT * FROM company where COMPANY_ID=?",[req.body.companyid]).then((data)=>{
-             console.log(data[0]);
-             const arr=data[0];
+             console.log(data);
+             const record = data;
+             
 
-             if(req.body.companyname!=null){
-                 arr.COMPANY_NAME=req.body.companyname
+                if(req.body.companyname!=null){
+                 record.COMPANY_NAME=req.body.companyname
               }
              if(req.body.companycity!=null){
-              arr.COMPANY_CITY=req.body.companycity
-              }
+                 record.COMPANY_CITY=req.body.companycity
+                }
              
               if (data.length == 0){
                 res.status(500).send({error:"No such company exist"});
@@ -414,15 +420,14 @@ app.patch('/company',[
                 return;
               }
               con.query("UPDATE company SET COMPANY_NAME=?, COMPANY_CITY=? WHERE COMPANY_ID=?",
-              [arr.COMPANY_NAME, arr.COMPANY_CITY, arr.COMPANY_ID])
+              [record.COMPANY_NAME, record.COMPANY_CITY, req.body.companyid])
                 .then(()=>{
                  
                 res.send("Successfully Updated");
                 con.end();
               })
             
-         })
-         .catch(err =>{
+         }).catch(err =>{
               
               console.log(err);
               
@@ -442,27 +447,19 @@ app.patch('/company',[
 //
 //
 //
-
-
   /**
  * @swagger
- * /company/put:
+ * /company:
  *    put:
- *      description: add record to company table
+ *      description: Update Records of Company
  *      produces:
  *          - application/json
  *      responses:
  *          200:
- *              description:  data put to company table
+ *              description:  Data updated of company
  *          500:
  *              description: Data already exists
  *      parameters:
- *          - name: company_id
- *            description: company object
- *            in: path
- *            required: true
- *            schema:
- *              $ref: '#/definitions/Company'
  *          - name: Company
  *            description: company object
  *            in: body
@@ -475,11 +472,11 @@ app.patch('/company',[
 app.put("/company",[
 
   check('companyid').isNumeric()
-  .withMessage('Company ID should be numbers').isLength({max:6}).withMessage("Maximum of 6 numbers"),
-  check('companyname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('Company Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
+  .withMessage('Should be Number').isLength({max:6}).withMessage("Maximum of 6 numbers"),
+  check('companyame').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
+  .withMessage('Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
   check('companycity').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('City Name should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
+  .withMessage('City should be Alphabets').isLength({max:25}).withMessage("Maximum of 25 characters"),
 
 ] ,(req, res) => {
   var errors= validationResult(req);
@@ -507,8 +504,8 @@ app.put("/company",[
            
           return;
         }
-        conn.query("UPDATE company SET COMPANY_ID=?, COMPANY_NAME=?, COMPANY_CITY=? WHERE COMPANY_ID=?",
-          [req.body.companyid, req.body.companyname,req.body.companycity])
+        conn.query("UPDATE company SET COMPANY_NAME=?, COMPANY_CITY=? WHERE COMPANY_ID=?",
+          [req.body.companyname, req.body.companycity, req.body.companyid])
             .then((data) => {
               res.header("Content-Type", "application/json");
               res.status(200);
@@ -530,6 +527,10 @@ app.put("/company",[
 });
 
 
+
+
+
+// Server action
 app.listen(port, () => {
         console.log (`Listening to port ${port}!`)
 });
