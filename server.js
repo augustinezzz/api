@@ -212,30 +212,26 @@ app.get('/order', function (req,res){
 })
 });
 
-/**
- * @swagger
- * /agents:
- *     post:
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              parameter:
-                AGENT_CODE:          # <!--- form field name
-                  type: string
-                AGENT_NAME:    # <!--- form field name
-                  type: integer
- *       responses:
- *           200:
- *               description: Object containing agents contaitng array
- * 
- */
+
+//post request root foods 
 
 /**
  * @swagger
- * /foods/post:
+ * definitions:
+ *   Foods:
+ *     properties:
+ *       itemid:
+ *         type: string
+ *       itemname:
+ *         type: string
+ *       itemunit:
+ *         type: string
+ *       companyid:
+ *         type: string
+ */
+/**
+ * @swagger
+ * /foods:
  *    post:
  *      description: add record to Foods table
  *      produces:
@@ -255,16 +251,16 @@ app.get('/order', function (req,res){
  *
  *
  */
-app.post("/agents/post",urlencodedParser,[
+app.post("/foods",urlencodedParser,[
 
-  check('itemid').isNumeric()
-  .withMessage('id should only have Number').isLength({max:6}).withMessage("Id should have maximum 6 numbers"),
-  check('itemname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('Name should only have Alphabets').isLength({max:25}).withMessage("Name should have maximum 20 characters"),
-  check('itemunit').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('Unit should only have Alphabets').isLength({max:5}).withMessage("Name should have maximum 5 characters"),
-  check('companyid').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
-  .withMessage('Company Id should only have Alphabets').isLength({max:6}).withMessage("Name should have maximum 6 characters")
+  check('item_id').isNumeric()
+  .withMessage('id be a number').isLength({max:6}).withMessage("Max 5 numbers allowed"),
+  check('item_name').isAlpha().trim().escape()
+  .withMessage('Name should have Alphabets').isLength({max:25}).withMessage("Max 20 characters"),
+  check('item_unit').isAlpha().trim().escape()
+  .withMessage('Should be Alphabets').isLength({max:5}).withMessage("Max 5 characters"),
+  check('company_id').isAlpha().trim().escape()
+  .withMessage('Company ID should be only Alphabets').isLength({max:5}).withMessage("Compay ID should be max 5 ch")
 
 ],async(req, res) => {
 
@@ -278,7 +274,7 @@ app.post("/agents/post",urlencodedParser,[
     || req.body.companyid==null){
      res.header("Content-Type", "application/json");
      res.status(400);
-     res.send("Invalid Body");
+     res.send("Body is Invalid");
      return;
     }
   pool
@@ -287,7 +283,7 @@ app.post("/agents/post",urlencodedParser,[
       conn.query("SELECT * FROM foods where ITEM_ID=?",[req.body.itemid]).then((row)=>{
         if(row.length>0){
           res.header("Content-Type", "application/json");
-          res.status(500).send({error:"Data already exists"});
+          res.status(500).send({error:"Data is already present"});
           conn.close();
           return;
         }
@@ -306,9 +302,6 @@ app.post("/agents/post",urlencodedParser,[
     });
   }
 });
-
-
-
 
  
 app.listen(port, () => {

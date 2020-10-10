@@ -181,7 +181,7 @@ app.get('/foods', async(req, res) => {
 app.post("/foods/post",urlencodedParser,[
 
     check('itemid').isNumeric()
-    .withMessage('id should only have Number').isLength({max:6}).withMessage("Id should have maximum 6 numbers"),
+    .withMessage('id be a number').isLength({max:6}).withMessage("Id should have maximum 6 numbers"),
     check('itemname').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
     .withMessage('Name should only have Alphabets').isLength({max:25}).withMessage("Name should have maximum 25 characters"),
     check('itemunit').trim().escape().custom(value => /^([a-zA-Z\s])*$/.test(value))
