@@ -374,12 +374,12 @@ app.delete('/company/:company_id',[
  *          200:
  *              description: Patched data to company table
  *      parameters:
- *          - name: companyid
+ *          - name: Company
  *            description: company object
  *            in: body
  *            required: true
  *            schema:
- *              $ref: '#/definitions/company'
+ *              $ref: '#/definitions/Company'
  *
  *
  */
