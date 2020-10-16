@@ -8,6 +8,7 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false });
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.raw());
+const axios = require('axios');
 
 //requiring swagger details
 const swaggerJsdoc = require('swagger-jsdoc');
@@ -47,6 +48,33 @@ const pool = mariadb.createPool({
 	port: 3306,
 	connectionlimit: 5
 });
+/*
+*
+* Google Cloud Serverless functions
+*
+*/
+app.get('/say',(req,res)=>{
+  console.log(req.query.keyword);
+  var gcp = 'https://us-central1-river-module-275601.cloudfunctions.net/my-function';
+  var keyword = req.query.keyword;
+  if ( !keyword == 0) {
+    var url = gcp + '?keyword=' + keyword ;
+  } else {
+    var url = gcp ;
+  }
+  axios.get(url)
+  .then(function (response) {
+  res.send(response.data);
+})
+.catch(function (error) {
+  
+  console.log(error);
+})
+.then(function () {
+ 
+});
+})
+
 
 /**
  * @swagger
